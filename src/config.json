@@ -1,0 +1,39 @@
+{
+   "config": [
+      {
+         "step": 1,
+         "type": "activity",
+         "name": "FetchDataFromApi",
+         "metaData": {
+            "url": "https://restcountries.com/v3.1/all",
+            "method": "GET"
+         }
+      },
+      {
+         "step": 2,
+         "type": "activity",
+         "name": "FetchDataFromApi",
+         "metaData": {
+            "url": "https://restcountries.com/v3.1/name/{countryName}",
+            "method": "GET",
+            "responseType": "array",
+            "params": {
+               "path": [
+                  {
+                     "paramKey": "{countryName}",
+                     "source": "INPUT_DATA",
+                     "path": "name.common"
+                  }
+               ],
+               "query": [],
+               "body": []
+            }
+         },
+         "orchestratorMetaData": {
+            "isArray": true,
+            "parallel": true,
+            "batchSize": 10
+         }
+      }
+   ]
+}
