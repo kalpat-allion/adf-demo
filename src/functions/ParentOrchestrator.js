@@ -1,55 +1,34 @@
 const { app } = require('@azure/functions');
 const df = require('durable-functions');
 
-require("./activity-functions/fetch-data");
+
+require("./APIOrchestrator"); //sub orchestrator
 
 df.app.orchestration("ParentOrchestrator", function* (context) {
   const config = context.df.getInput(); // Get the configuration JSON object
   context.log(`Received configuration: ${JSON.stringify(config)}`);
 
-  let results = [];
-  // Loop through each step in the config
-  // for (const step of config.config) {
-  //     results = yield context.df.callActivity(step.type, { metaData: step.metaData, results })
-  // }
+  let results = {};
 
-  for (const step of config.config) {
-    if (step.orchestratorMetaData && step.orchestratorMetaData.isArray) {
-      if (results) {
-        if (step.orchestratorMetaData.batchSize) {
-          const batchSize = step.orchestratorMetaData.batchSize;
+  for (const step of config.executionSteps) {
+    if(step.type == "connector") {
+      if(step.connectorType == "API") {
 
-          let batchResults = [];
-
-          for (let i = 0; i < results.length; i += batchSize) {
-            const batch = results.slice(i, i + batchSize);
-
-            const tasks = batch.map((result) =>
-              context.df.callActivity(step.name, {
-                metaData: step.metaData,
-                result,
-              })
-            );
-
-            const batchResult = yield context.df.Task.all(tasks);
-
-            batchResults = batchResults.concat(batchResult);
-          }
-
-            // const final = { results: batchResults }
-            // console.log("🚀 ~ df.app.orchestration ~ final:", JSON.stringify(final))
-
-            return { results: batchResults }
+        const subOrchParam = {
+          results,
+          step
         }
+
+        // call APIOrchestrator sub orchestrator
+        results = yield context.df.callSubOrchestrator(
+          "APIOrchestrator",
+          subOrchParam
+        );
+
       }
-    } else {
-      results = yield context.df.callActivity(step.name, {
-        metaData: step.metaData,
-        results,
-      });
-    //   console.log("🚀 ~ df.app.orchestration ~ results: else", results);
     }
   }
+ 
 });
 
 

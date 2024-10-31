@@ -15,8 +15,9 @@ df.app.activity('FetchDataFromApi', {
         for(const path of pathArray) {
 
           const dynamicPath = path.path;
-          const actualPath = getValueByPath(input.result, dynamicPath);
+          const actualPath = getValueByPath(input.result, dynamicPath); // handle dynamic paths
           
+          // replace '{countryName}' with 'name.common'
           apiUrl = apiUrl.replace(path.paramKey, actualPath)
          
         }
@@ -24,7 +25,7 @@ df.app.activity('FetchDataFromApi', {
 
         response = await axios.get(apiUrl);
         
-
+        // the url we are testing returns even a single object within an array. this part is for take out the object from array
         if(input.metaData.responseType && input.metaData.responseType == "array") {
           if(response.data.length == 1) {
             response.data = {...response.data[0]}
@@ -44,6 +45,7 @@ df.app.activity('FetchDataFromApi', {
 });
 
 
+// make the path dynamic
 function getValueByPath(obj, path) {
   return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined) ? acc[key] : undefined, obj);
 }
